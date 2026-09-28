@@ -2,7 +2,7 @@
 
 Two objectives, both supervised only by *which policy* produced a clip:
 
-  acroaf  CardPol. A discriminator sees the embeddings of two frame stacks of the
+  cardpol CARDPol. A discriminator sees the embeddings of two frame stacks of the
           same trajectory, g ~ U{1..K} steps apart, and classifies the policy.
   polcon  Policy contrastive (trajectory-agnostic). Supervised-contrastive
           (SupCon) loss on single frame stacks; same-policy stacks are positives.
@@ -10,7 +10,7 @@ Two objectives, both supervised only by *which policy* produced a clip:
 A detached MLP probe that regresses the true state from the embedding is
 trained alongside (it does not shape the encoder) and reported as state_loss.
 
-    python -m cardpol.pretrain --method acroaf --domain cheetah --setting easy_video
+    python -m cardpol.pretrain --method cardpol --domain cheetah --setting easy_video
 
 Writes runs/pretrain/<method>/<domain>_<setting>/seed<seed>/{encoder.pt, config.json, *_metrics.csv}.
 """
@@ -28,7 +28,7 @@ from cardpol.common import DATA_DIR, FRAME_STACK, PRETRAIN_CKPTS, RUNS_DIR, SETT
 from cardpol.data import MultiPolicyDataset, augment, make_loader, to_unit_range
 from cardpol.models import MLP, Encoder
 
-OUTPUT_NORM = {'acroaf': 'acro', 'polcon': 'none'}
+OUTPUT_NORM = {'cardpol': 'layernorm', 'polcon': 'none'}
 # Epochs of the paper encoders: 4, except 3 for walker clean / static / easy_video.
 PAPER_EPOCHS = {('walker', 'clean'): 3, ('walker', 'static'): 3, ('walker', 'easy_video'): 3}
 
@@ -51,7 +51,7 @@ class Pretrainer:
         self.encoder = Encoder(3 * FRAME_STACK, args.feature_dim, OUTPUT_NORM[args.method]).to(device)
         self.probe = MLP(args.feature_dim, STATE_DIM[args.domain], hidden_dim=128, num_layers=2).to(device)
         params = list(self.encoder.parameters()) + list(self.probe.parameters())
-        if args.method == 'acroaf':
+        if args.method == 'cardpol':
             self.discriminator = MLP(2 * args.feature_dim, num_policies, hidden_dim=512, num_layers=2).to(device)
             params += list(self.discriminator.parameters())
         self.optimizer = torch.optim.Adam(params, lr=args.lr, weight_decay=args.weight_decay)
@@ -59,7 +59,7 @@ class Pretrainer:
         self.state_std = torch.as_tensor(state_std, device=device)
 
     def modules(self):
-        return [self.encoder, self.probe] + ([self.discriminator] if self.args.method == 'acroaf' else [])
+        return [self.encoder, self.probe] + ([self.discriminator] if self.args.method == 'cardpol' else [])
 
     def losses(self, batch, train):
         fs = FRAME_STACK
@@ -71,7 +71,7 @@ class Pretrainer:
         B = len(frames)
         t0 = frames[:, :fs].flatten(1, 2)  # (B, 3*fs, 84, 84)
         metrics = {}
-        if self.args.method == 'acroaf':
+        if self.args.method == 'cardpol':
             # second frame stack starts g ~ U{1..K} steps after the first
             gap = torch.randint(1, self.args.K + 1, (B, 1), device=self.device)
             rows = torch.arange(B, device=self.device)[:, None]
@@ -130,7 +130,7 @@ def main():
     p.add_argument('--lr', type=float, default=1e-4)
     p.add_argument('--weight-decay', type=float, default=1e-4)
     p.add_argument('--feature-dim', type=int, default=256)
-    p.add_argument('--K', type=int, default=10, help='acroaf: max gap in steps between the two frame stacks')
+    p.add_argument('--K', type=int, default=10, help='cardpol: max gap in steps between the two frame stacks')
     p.add_argument('--temperature', type=float, default=0.1, help='polcon: SupCon temperature')
     p.add_argument('--no-augment', dest='augment', action='store_false', help='disable crop + color jitter')
     p.add_argument('--val-every', type=int, default=100, help='steps between validations')
@@ -154,7 +154,7 @@ def main():
     np.random.seed(args.seed)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    horizon = args.K + FRAME_STACK if args.method == 'acroaf' else FRAME_STACK
+    horizon = args.K + FRAME_STACK if args.method == 'cardpol' else FRAME_STACK
     paths = {split: [rollout_path(args.domain, args.setting, split, c, args.data_dir) for c in args.ckpts]
              for split in ('train', 'val')}
     train_set = MultiPolicyDataset(paths['train'], horizon)

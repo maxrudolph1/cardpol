@@ -4,7 +4,7 @@ The offline dataset is the rendered rollouts (with rewards) of a single policy
 (cheetah ckpt 6, walker ckpt 7) under the same distraction the encoder was
 trained on; evaluation runs online in that distracting environment.
 
-    python -m cardpol.drqbc --encoder runs/pretrain/acroaf/cheetah_easy_video/seed0 --seed 0
+    python -m cardpol.drqbc --encoder runs/pretrain/cardpol/cheetah_easy_video/seed0 --seed 0
 
 Writes <encoder>/drqbc/seed<seed>/{eval.csv, train.csv, result.json}. The
 reported score is final5: the mean of the last 5 evaluations (10 episodes each).
@@ -69,7 +69,7 @@ def main():
 
     if args.from_scratch:
         assert args.domain and args.setting, '--from-scratch needs --domain and --setting'
-        encoder, config = Encoder(3 * FRAME_STACK, 256, 'acro'), {'method': 'scratch', 'domain': args.domain,
+        encoder, config = Encoder(3 * FRAME_STACK, 256, 'layernorm'), {'method': 'scratch', 'domain': args.domain,
                                                                    'setting': args.setting}
         default_out = RUNS_DIR / 'pretrain' / 'scratch' / f'{args.domain}_{args.setting}' / 'drqbc' / f'seed{args.seed}'
     else:

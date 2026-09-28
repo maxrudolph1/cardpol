@@ -1,10 +1,10 @@
-# CardPol: action-free representations from multi-policy video
+# CARDPol: action-free representations from multi-policy video
 
 This repository reproduces the DeepMind Control experiments on **cheetah-run**
 and **walker-walk** under four kinds of visual distraction. It covers two
 representation-learning objectives:
 
-- **CardPol** (`acroaf`) classifies which policy produced a pair of frame stacks
+- **CARDPol** (`cardpol`) classifies which policy produced a pair of frame stacks
   from the same trajectory, taken up to K steps apart.
 - **Policy contrastive** (`polcon`) is a supervised-contrastive baseline:
   frame stacks from the same policy are positives.
@@ -19,7 +19,7 @@ The pipeline has four stages, and each one is a single command:
         │  policies/<domain>/ckpt_<i>.pt   (the paper's policies are included)
 2. cardpol.render          roll the policies out; render 84x84 frames with distractions
         │  data/rollouts/<domain>/<setting>/{train,val}/ckpt_<i>.hdf5
-3. cardpol.pretrain        learn an image encoder with acroaf or polcon
+3. cardpol.pretrain        learn an image encoder with cardpol or polcon
         │  runs/pretrain/<method>/<domain>_<setting>/seed0/encoder.pt
 4. cardpol.drqbc           offline RL (DrQ+BC) on the frozen encoder; evaluate in the distracting env
            runs/pretrain/<method>/<domain>_<setting>/seed0/drqbc/seed<s>/result.json
@@ -31,7 +31,7 @@ You need Linux, an NVIDIA GPU and Python 3.10 or newer. MuJoCo renders
 headlessly through EGL.
 
 ```bash
-git clone <this repo> cardpol && cd cardpol
+git clone https://github.com/maxrudolph1/cardpol.git && cd cardpol
 uv venv --python 3.11 && source .venv/bin/activate   # or: python -m venv .venv
 uv pip install -e .                                  # or: pip install -e .
 bash scripts/download_davis.sh                       # DAVIS 2017 backgrounds -> data/DAVIS (~830 MB)
@@ -96,7 +96,7 @@ Rerunning the command resumes an interrupted render.
 ## Stage 3: representation learning
 
 ```bash
-python -m cardpol.pretrain --method acroaf --domain cheetah --setting easy_video
+python -m cardpol.pretrain --method cardpol --domain cheetah --setting easy_video
 python -m cardpol.pretrain --method polcon --domain cheetah --setting easy_video
 ```
 
@@ -106,7 +106,7 @@ batch size 512, Adam at lr 1e-4 with weight decay 1e-4, and random-crop plus
 color-jitter augmentation. Training runs 4 epochs, or 3 for walker
 clean/static/easy_video. The method-specific settings are:
 
-- **acroaf:** a 2×512 MLP discriminator, and K=10.
+- **CARDPol:** a 2×512 MLP discriminator, and K=10.
 - **polcon:** SupCon temperature 0.1.
 
 The whole training set is loaded into RAM, so plan for about 40 GB of RAM.
@@ -119,7 +119,7 @@ option.
 
 ```bash
 for s in 0 1 2 3; do
-  python -m cardpol.drqbc --encoder runs/pretrain/acroaf/cheetah_easy_video/seed0 --seed $s
+  python -m cardpol.drqbc --encoder runs/pretrain/cardpol/cheetah_easy_video/seed0 --seed $s
 done
 ```
 
@@ -154,12 +154,12 @@ These are the paper's DrQ+BC results: final5, mean ± std over 4 seeds.
 
 | Method | Cheetah clean | Cheetah static | Cheetah easy video | Cheetah hard video | Walker clean | Walker static | Walker easy video | Walker hard video |
 |---|---|---|---|---|---|---|---|---|
-| CardPol (`acroaf`) | 523 ± 10 | 614 ± 8 | 449 ± 32 | 293 ± 21 | 885 ± 34 | 649 ± 67 | 578 ± 17 | 443 ± 10 |
+| CARDPol (`cardpol`) | 523 ± 10 | 614 ± 8 | 449 ± 32 | 293 ± 21 | 885 ± 34 | 649 ± 67 | 578 ± 17 | 443 ± 10 |
 | Policy contrastive (`polcon`) | 402 ± 80 | 425 ± 30 | 336 ± 51 | 196 ± 26 | 726 ± 42 | 384 ± 87 | 378 ± 19 | 354 ± 36 |
 
 ## Differences from the original research code
 
-- **K for acroaf.** `acroaf` samples the gap between its two frame stacks
+- **K for CARDPol.** CARDPol samples the gap between its two frame stacks
   uniformly from {1..K}, with K=10. The earlier paper encoders were trained
   with gaps in {1..7}; walker hard video used {1..10}. To match those earlier
   encoders, use `--K 7`.
@@ -176,7 +176,7 @@ src/cardpol/
   select_policies.py   stage 1b: pick snapshots of graded quality
   render.py            stage 2: rollouts + distraction rendering -> HDF5
   data.py, models.py   dataset/augmentation, encoder/MLP
-  pretrain.py          stage 3: acroaf / polcon
+  pretrain.py          stage 3: CARDPol / polcon
   drqbc/               stage 4: DrQ+BC agent, replay buffer, entry point
   envs/dmc.py          pixel DMC wrappers (from V-D4RL)
   envs/dcs/            Distracting Control Suite wrappers (Apache-2.0)

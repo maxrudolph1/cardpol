@@ -24,7 +24,7 @@ delete afterwards.
 ## 2. The pipeline
 
 Here `D` is `cheetah` or `walker`, `S` is `clean`, `static`, `easy_video` or
-`hard_video`, and `M` is `acroaf` or `polcon`.
+`hard_video`, and `M` is `cardpol` or `polcon`.
 
 | step | command | output | cost (1 A40) |
 |---|---|---|---|
@@ -48,12 +48,12 @@ render → pretrain → drqbc.
   the intended distraction. The command prints the mean return per policy. It
   should be close to the returns in `common.PAPER_POLICY_RETURNS`, for example
   cheetah `ckpt_8` ≈ 804.
-- **Pretrain:** `val_metrics.csv` has `loss`, `state_loss` and, for acroaf,
-  `accuracy`. The loss should fall. For acroaf, `accuracy` should end well
+- **Pretrain:** `val_metrics.csv` has `loss`, `state_loss` and, for CARDPol,
+  `accuracy`. The loss should fall. For CARDPol, `accuracy` should end well
   above chance (1/5).
 - **DrQ+BC:** `eval.csv` has one row per 10k steps. The score is
   `result.json:final5`. `summarize.py` puts it next to the paper's numbers.
-  Expect the ranking acroaf > polcon; single seeds are noisy (std up to about
+  Expect the ranking CARDPol > polcon; single seeds are noisy (std up to about
   80).
 
 ## 4. Gotchas

@@ -13,7 +13,7 @@ python -m cardpol.select_policies --domain "$DOMAIN" --sac-dir "$CARDPOL_RUNS/sa
   --targets 0 10 --episodes 1
 python -m cardpol.render --domain "$DOMAIN" --setting "$SETTING" --ckpts 0 "$OFFLINE" \
   --train-episodes 4 --val-episodes 2 --workers 2
-for METHOD in acroaf polcon; do
+for METHOD in cardpol polcon; do
   python -m cardpol.pretrain --method "$METHOD" --domain "$DOMAIN" --setting "$SETTING" --ckpts 0 "$OFFLINE" \
     --batch-size 64 --max-steps 30 --val-every 10 --val-batches 2 --num-workers 2
   python -m cardpol.drqbc --encoder "$CARDPOL_RUNS/pretrain/$METHOD/${DOMAIN}_${SETTING}/seed0" \

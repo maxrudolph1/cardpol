@@ -12,9 +12,10 @@ from pathlib import Path
 
 DOMAINS = ['cheetah', 'walker']
 SETTINGS = ['clean', 'static', 'easy_video', 'hard_video']
+LABEL = {'cardpol': 'CARDPol'}
 # DrQ+BC final5, mean +- std over 4 seeds, 5 pretraining policies (paper table).
 PAPER = {
-    'acroaf': {'cheetah': [(523, 10), (614, 8), (449, 32), (293, 21)],
+    'cardpol': {'cheetah': [(523, 10), (614, 8), (449, 32), (293, 21)],
                'walker': [(885, 34), (649, 67), (578, 17), (443, 10)]},
     'polcon': {'cheetah': [(402, 80), (425, 30), (336, 51), (196, 26)],
                'walker': [(726, 42), (384, 87), (378, 19), (354, 36)]},
@@ -50,10 +51,11 @@ def main():
             v = scores.get((method, d, s), [])
             std = statistics.stdev(v) if len(v) > 1 else 0.0
             cells.append(f'{statistics.mean(v):.0f} ± {std:.0f} ({len(v)})' if v else '–')
-        print(f'| {method} | ' + ' | '.join(cells) + ' |')
+        name = LABEL.get(method, method)
+        print(f'| {name} | ' + ' | '.join(cells) + ' |')
         if method in PAPER:
             paper = [PAPER[method][d][SETTINGS.index(s)] for d, s in cols]
-            print(f'| {method} (paper) | ' + ' | '.join(f'{m} ± {sd} (4)' for m, sd in paper) + ' |')
+            print(f'| {name} (paper) | ' + ' | '.join(f'{m} ± {sd} (4)' for m, sd in paper) + ' |')
     print('\ncells: DrQ+BC final5 (mean of the last 5 evaluations), mean ± std over seeds (n)')
 
 
