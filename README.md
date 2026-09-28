@@ -197,3 +197,7 @@ You can relocate the defaults with environment variables: `CARDPOL_DATA`
   [Distracting Control Suite](https://github.com/google-research/google-research/tree/master/distracting_control)
   (Apache-2.0).
 - SAC follows [CleanRL](https://github.com/vwxyzjn/cleanrl).
+
+## License
+
+MIT (see `LICENSE`). The vendored Distracting Control Suite code in `src/cardpol/envs/dcs/` is Apache-2.0.

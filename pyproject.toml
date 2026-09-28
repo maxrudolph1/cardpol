@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "cardpol"
 version = "0.1.0"
 description = "Action-free representation learning from multi-policy video (CardPol) on distracting DMC"
+license = { text = "MIT" }
 requires-python = ">=3.10"
 dependencies = [
     "torch==2.5.1",  # CUDA 12.1 build, see [tool.uv.sources]
