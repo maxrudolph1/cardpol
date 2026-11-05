@@ -1,5 +1,8 @@
 # CARDPol: action-free representations from multi-policy video
 
+The research project website is in [`website/`](website/README.md), with a
+GitHub Pages deployment workflow and a downloadable copy of the paper.
+
 This repository reproduces the DeepMind Control experiments on **cheetah-run**
 and **walker-walk** under four kinds of visual distraction. It covers two
 representation-learning objectives:

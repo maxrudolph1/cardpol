@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#176b52">
+  <meta name="description" content="CARDPol learns control-relevant visual representations from action-free videos by predicting which policy generated a pair of observations.">
+  <meta property="og:title" content="CARDPol · Learning from distinct policies">
+  <meta property="og:description" content="Control-centric Representation Learning using Action-free Datasets with Distinct Policies.">
+  <meta property="og:type" content="website">
+  <title>CARDPol | Control-centric Representation Learning</title>
+  <link rel="icon" href="static/images/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="static/css/index.css">
+  <script src="static/js/index.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#overview">Skip to content</a>
+  <nav class="site-nav" aria-label="Main navigation">
+    <a class="site-brand" href="#top">CARDPol<span class="brand-dot">.</span></a>
+    <div><a href="#method">Method</a><a href="#results">Results</a><a href="#analysis">Analysis</a><a href="#resources">Resources</a></div>
+  </nav>
+
+  <main id="top">
+    <header class="hero container">
+      <p class="eyebrow">Action-free video · Representation learning · Visual control</p>
+      <h1>Control-centric Representation Learning using Action-free Datasets with Distinct Policies</h1>
+      <p class="hero-summary">Learn what matters for control by asking<br class="desktop-break"> <em>which policy produced this behavior?</em></p>
+      <div class="publication-links">
+        <a class="button primary" href="static/paper/cardpol.pdf"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z M14 3v5h4 M9 12h6 M9 16h6"/></svg>Read the paper</a>
+        <a class="button" href="https://github.com/maxrudolph1/cardpol"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 7-5 5 5 5 M16 7l5 5-5 5 M14 4l-4 16"/></svg>Code</a>
+        <a class="text-link" href="#results">Explore the results <span aria-hidden="true">↓</span></a>
+      </div>
+    </header>
+
+    <section class="container teaser" aria-label="Evaluation environments">
+      <div class="environment-grid">
+        <figure><img src="static/images/cheetah.webp" alt="Cheetah locomotion with a video of a person behind the simulated agent" width="256" height="256"><figcaption><span>01 / Locomotion</span>Cheetah</figcaption></figure>
+        <figure><img src="static/images/walker.webp" alt="Walker locomotion against a moving real-world video background" width="256" height="256"><figcaption><span>02 / Locomotion</span>Walker</figcaption></figure>
+        <figure><img src="static/images/libero.webp" alt="LIBERO robot manipulation with an unrelated video alongside the robot view" width="256" height="128"><figcaption><span>03 / Manipulation</span>LIBERO</figcaption></figure>
+        <figure><img src="static/images/egodex.webp" alt="Examples of first-person human manipulation recordings from EgoDex" width="1400" height="784"><figcaption><span>04 / Human video</span>EgoDex</figcaption></figure>
+      </div>
+      <p class="caption">Different behaviors provide a learning signal. Moving backgrounds and unrelated visual content make it harder to identify the features that matter.</p>
+    </section>
+
+    <section id="overview" class="section container narrow">
+      <p class="eyebrow">Overview</p>
+      <h2>Learning from video, without action labels</h2>
+      <p>Videos contain useful information about behavior, but also visual changes that an agent cannot control. Without actions or rewards, a representation learner can confuse a moving background with meaningful dynamics.</p>
+      <p><strong>CARDPol</strong>—Controllable Action-free Representations using Distinct Policies—uses an additional source of supervision: trajectories grouped by the policies that collected them. A shared encoder and classifier learn to predict policy identity from pairs of observations. Differences in behavior help reveal control-relevant features, even when the scene contains time-correlated distractions.</p>
+      <p>We evaluate frozen representations for offline reinforcement learning in DeepMind Control, joint representation learning and behavior cloning in LIBERO, and human wrist-position decoding on EgoDex. The results show improved control under video distractions and reduced sensitivity to irrelevant visual variation.</p>
+    </section>
+
+    <section class="tinted-band">
+      <div class="container intuition">
+        <div class="section-heading"><p class="eyebrow">The intuition</p><h2>Same world. Different policies.</h2><p>One robot moves left; another moves right. To tell their policies apart, look at the robot’s behavior. The trees, sky, and animals need not explain the difference.</p></div>
+        <div class="policy-pair">
+          <figure><img src="static/images/policy-left.webp" alt="Two robot positions illustrate a policy moving left while background animals move independently" loading="lazy" width="1200" height="635"><figcaption><strong>Policy A</strong> Move left</figcaption></figure>
+          <figure><img src="static/images/policy-right.webp" alt="Two robot positions illustrate a policy moving right in the same distracting environment" loading="lazy" width="1200" height="633"><figcaption><strong>Policy B</strong> Move right</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <section id="method" class="section container">
+      <div class="section-heading"><p class="eyebrow">The method</p><h2>A simple prediction task for useful representations</h2><p>Sample two observations from one trajectory, encode both with the same network, and predict the policy that generated them.</p></div>
+      <div class="pipeline" aria-label="Training pipeline: two observations pass through a shared encoder; their representations predict a policy identity using cross-entropy loss">
+        <div class="pipeline-stage"><span class="step-number">01</span><h3>Sample an observation pair</h3><div class="frame-pair"><span>x<sub>t</sub></span><span>x<sub>t+k</sub></span></div><p>Same trajectory<br>Random temporal offset <i>k</i></p></div>
+        <span class="pipeline-arrow" aria-hidden="true">→</span>
+        <div class="pipeline-stage"><span class="step-number">02</span><h3>Share a visual encoder</h3><div class="encoder-symbol">φ<sub>θ</sub></div><p>Both observations become<br>compact visual representations</p></div>
+        <span class="pipeline-arrow" aria-hidden="true">→</span>
+        <div class="pipeline-stage"><span class="step-number">03</span><h3>Predict policy identity</h3><div class="policy-symbol"><span>π<sub>1</sub></span><span class="selected">π<sub>2</sub></span><span>π<sub>N</sub></span></div><p>Cross-entropy updates<br>the encoder and classifier</p></div>
+      </div>
+      <div class="equation" aria-label="Minimize expected negative log probability of the true policy given two encoded observations and their temporal offset"><span>ℒ<sub>CARDPol</sub> = 𝔼 [−log f<sub>ψ</sub>(i | φ<sub>θ</sub>(x<sub>t</sub>), φ<sub>θ</sub>(x<sub>t+k</sub>); k)]</span></div>
+      <div class="method-notes"><p><strong>During representation learning</strong><br>Use observations and policy labels. No actions or rewards enter the CARDPol objective. Task identity serves as a practical policy-class proxy in LIBERO and EgoDex.</p><p><strong>For downstream control</strong><br>Discard the classifier. DMC freezes the encoder for action- and reward-labeled DrQ+BC training; LIBERO jointly trains the encoder with target-task behavior cloning.</p></div>
+      <details class="theory-note"><summary>What does the theory guarantee?</summary><p>Under the paper’s finite-space, coverage, stationarity, noise-independence, and policy-diversity assumptions, the ground-truth endogenous encoder minimizes the objective, and any minimizing encoder retains enough information to recover the endogenous state. This is an information-sufficiency guarantee: it does not require the representation to exclude exogenous information. Continuous-control performance and distractor sensitivity are evaluated empirically.</p></details>
+    </section>
+
+    <section id="results" class="section tinted-band">
+      <div class="container">
+        <div class="section-heading"><p class="eyebrow">Downstream control</p><h2>Useful representations in distracting environments</h2><p>Reported results from the paper. Representation learning is action-free; downstream control uses labeled data.</p></div>
+        <div class="headline-stats"><div><strong>25–53%</strong><span>higher DMC video-distraction return<br>than the strongest evaluated baseline per setting</span></div><div><strong>3 / 3</strong><span>LIBERO suites with the highest mean<br>success under video distractions</span></div><div><strong>8 / 8</strong><span>DMC settings with the highest<br>mean return</span></div></div>
+        <div class="results-heading"><h3>DeepMind Control Suite</h3><p>Frozen encoders → offline DrQ+BC · Mean return ± standard error, 4 seeds</p></div>
+        <div class="chart-controls" hidden aria-label="Choose locomotion domain"><button type="button" data-domain="cheetah" aria-pressed="true">Cheetah</button><button type="button" data-domain="walker" aria-pressed="false">Walker</button></div>
+        <div class="comparison-chart" aria-live="polite"></div>
+        <details class="results-details" open><summary>All DMC results</summary>
+          <div class="table-scroll" role="region" tabindex="0" aria-label="DMC return table, scroll horizontally on small screens">
+            <table id="dmc-table"><caption>Mean episodic return ± standard error over four seeds. Bold marks the highest mean in each row.</caption><thead><tr><th scope="col">Domain</th><th scope="col">Setting</th><th scope="col" class="ours">CARDPol</th><th scope="col">PolCon</th><th scope="col">VIP</th><th scope="col">ICVF</th><th scope="col">VAE</th><th scope="col">VQVAE</th><th scope="col">CURL</th></tr></thead><tbody>
+              <tr data-domain="cheetah"><th scope="row">Cheetah</th><td>Clean</td><td class="ours"><strong>523 ± 5</strong></td><td>402 ± 40</td><td>411 ± 28</td><td>412 ± 13</td><td>364 ± 27</td><td>131 ± 10</td><td>337 ± 17</td></tr>
+              <tr data-domain="cheetah"><th scope="row">Cheetah</th><td>Static</td><td class="ours"><strong>614 ± 4</strong></td><td>425 ± 15</td><td>462 ± 5</td><td>510 ± 12</td><td>201 ± 11</td><td>271 ± 19</td><td>602 ± 11</td></tr>
+              <tr data-domain="cheetah"><th scope="row">Cheetah</th><td>Video</td><td class="ours"><strong>449 ± 16</strong></td><td>336 ± 26</td><td>257 ± 15</td><td>301 ± 9</td><td>174 ± 9</td><td>133 ± 4</td><td>357 ± 8</td></tr>
+              <tr data-domain="cheetah"><th scope="row">Cheetah</th><td>Hard video</td><td class="ours"><strong>293 ± 11</strong></td><td>196 ± 13</td><td>117 ± 7</td><td>218 ± 16</td><td>88 ± 0</td><td>82 ± 2</td><td>150 ± 6</td></tr>
+              <tr data-domain="walker" class="group-start"><th scope="row">Walker</th><td>Clean</td><td class="ours"><strong>885 ± 17</strong></td><td>726 ± 21</td><td>313 ± 18</td><td>883 ± 6</td><td>140 ± 11</td><td>148 ± 6</td><td>647 ± 34</td></tr>
+              <tr data-domain="walker"><th scope="row">Walker</th><td>Static</td><td class="ours"><strong>649 ± 33</strong></td><td>384 ± 44</td><td>139 ± 3</td><td>254 ± 17</td><td>72 ± 3</td><td>76 ± 2</td><td>132 ± 7</td></tr>
+              <tr data-domain="walker"><th scope="row">Walker</th><td>Video</td><td class="ours"><strong>578 ± 8</strong></td><td>378 ± 9</td><td>134 ± 7</td><td>129 ± 3</td><td>101 ± 4</td><td>95 ± 2</td><td>102 ± 3</td></tr>
+              <tr data-domain="walker"><th scope="row">Walker</th><td>Hard video</td><td class="ours"><strong>443 ± 5</strong></td><td>354 ± 18</td><td>86 ± 5</td><td>123 ± 8</td><td>81 ± 6</td><td>72 ± 1</td><td>74 ± 2</td></tr>
+            </tbody></table>
+          </div>
+        </details>
+        <p class="result-note">Pretraining: 1.25M transitions from five policy checkpoints per domain, with actions and rewards withheld. Downstream: 250k expert transitions with action and reward labels. PolCon uses the same policy labels as CARDPol.</p>
+
+        <div class="results-heading libero-heading"><h3>LIBERO robot manipulation</h3><p>Joint representation learning + behavior cloning · Success rate (%)</p></div>
+        <p>Across Goal, Object, and Spatial tasks, CARDPol achieves the highest mean success rate in every video-distraction setting. Each target-task policy uses action labels only for its own task; demonstrations across tasks supply the representation loss.</p>
+        <div class="table-scroll" role="region" tabindex="0" aria-label="LIBERO success table, scroll horizontally on small screens">
+          <table><caption>Success rate (%) ± SEM across 10 tasks, with five training seeds per task. Bold marks the highest mean in each row.</caption><thead><tr><th scope="col">Suite</th><th scope="col">Setting</th><th scope="col" class="ours">CARDPol</th><th scope="col">PolCon</th><th scope="col">No rep.</th><th scope="col">VIP</th><th scope="col">VAE</th><th scope="col">VQ-VAE</th><th scope="col">CURL</th><th scope="col">ICVF</th></tr></thead><tbody>
+            <tr><th scope="row">Goal</th><td>Clean</td><td class="ours"><strong>77.4 ± 5.3</strong></td><td>70.8 ± 5.9</td><td>69.6 ± 9.1</td><td>66.4 ± 8.8</td><td>50.8 ± 7.1</td><td>57.4 ± 7.4</td><td>65.8 ± 7.3</td><td>71.8 ± 4.4</td></tr>
+            <tr><th scope="row">Goal</th><td>Video</td><td class="ours"><strong>69.2 ± 7.6</strong></td><td>65.4 ± 6.2</td><td>57.8 ± 8.4</td><td>59.6 ± 8.2</td><td>52.0 ± 7.1</td><td>52.2 ± 6.2</td><td>3.0 ± 1.5</td><td>62.0 ± 7.9</td></tr>
+            <tr class="group-start"><th scope="row">Object</th><td>Clean</td><td class="ours">71.2 ± 6.9</td><td>73.0 ± 5.1</td><td>68.2 ± 8.0</td><td>65.1 ± 5.5</td><td>49.2 ± 4.6</td><td>51.8 ± 6.2</td><td><strong>73.2 ± 5.8</strong></td><td>67.6 ± 7.0</td></tr>
+            <tr><th scope="row">Object</th><td>Video</td><td class="ours"><strong>64.6 ± 3.0</strong></td><td>59.0 ± 5.1</td><td>51.4 ± 3.7</td><td>54.1 ± 4.9</td><td>49.6 ± 4.7</td><td>46.6 ± 4.7</td><td>0.8 ± 0.3</td><td>54.0 ± 4.8</td></tr>
+            <tr class="group-start"><th scope="row">Spatial</th><td>Clean</td><td class="ours">52.6 ± 9.6</td><td><strong>59.6 ± 7.9</strong></td><td>50.8 ± 9.0</td><td>55.4 ± 9.9</td><td>34.8 ± 5.5</td><td>33.4 ± 5.8</td><td>52.8 ± 8.9</td><td>49.2 ± 7.7</td></tr>
+            <tr><th scope="row">Spatial</th><td>Video</td><td class="ours"><strong>51.6 ± 7.7</strong></td><td>49.2 ± 9.4</td><td>46.8 ± 9.6</td><td>45.6 ± 8.0</td><td>35.4 ± 6.9</td><td>33.8 ± 9.1</td><td>4.4 ± 1.5</td><td>48.8 ± 8.8</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <section id="analysis" class="section container">
+      <div class="section-heading"><p class="eyebrow">Understanding the representation</p><h2>Keep the state. Reduce sensitivity to distractions.</h2><p>Good state decoding alone does not establish invariance. We separately test what the representation retains and how it changes when only the background varies.</p></div>
+      <div class="analysis-grid">
+        <figure><h3>Can we recover the agent’s state?</h3><img src="static/images/state-decoding.webp" alt="Bar chart comparing state-decoding mean squared error under clean, static, and video distractions; CARDPol remains among the lowest-error methods" loading="lazy" width="1588" height="788"><figcaption>A probe decodes proprioceptive state from frozen embeddings. CARDPol has lower state-decoding error than PolCon in every distraction condition.</figcaption></figure>
+        <figure><h3>What if only the distractor changes?</h3><img src="static/images/exo-variance.webp" alt="Exogenous-variance ratio for matched trajectories; CARDPol and PolCon have substantially lower ratios than the other methods" loading="lazy" width="1600" height="787"><figcaption>Hold the endogenous trajectory fixed and change the video. CARDPol and PolCon have low exogenous-variance ratios; PolCon’s is slightly lower at the default dimension.</figcaption></figure>
+      </div>
+      <img class="plot-legend" src="static/images/legend.webp" alt="Legend for both plots: CARDPol, PolCon, ICVF, VIP, CURL, and VQ-VAE" width="1594" height="96" loading="lazy">
+      <p class="caption">Lower is better in both plots. Together, these tests distinguish distractor insensitivity from retaining information useful for control.</p>
+
+      <div class="human-section">
+        <div><p class="eyebrow">Beyond simulation</p><h2>Learning from human egocentric video</h2><p>On a subset of EgoDex covering <strong>111 task classes</strong>, task annotations supply policy-class labels. After representation pretraining, a separate labeled partition trains a wrist-position decoder on the frozen encoder.</p><p>CARDPol achieves the lowest mean 3D wrist-position decoding error among the evaluated methods. The closest baseline, VAE, has approximately <strong>15% higher error</strong>.</p><p class="result-note">Evaluation images were seen during action-free encoder pretraining, but their pose labels were not used to train the encoder or decoder. This experiment measures pose decodability, rather than downstream human-to-robot control.</p></div>
+        <figure><img src="static/images/egodex-error.webp" alt="EgoDex wrist-position decoding mean squared error: CARDPol has the lowest mean, followed by VAE" loading="lazy" width="1397" height="1085"><figcaption>3D wrist-position decoding from frozen visual representations. Lower is better.</figcaption></figure>
+      </div>
+      <details class="theory-note"><summary>When can policy supervision fail?</summary><p>CARDPol needs informative trajectory partitions. If backgrounds or other exogenous features correlate with policy identity, the classifier can exploit visual shortcuts. Task labels are useful empirical proxies, but need not satisfy the theoretical assumptions. Robustness to policy-correlated visual context remains untested.</p></details>
+    </section>
+
+    <section id="resources" class="section tinted-band">
+      <div class="container resource-section"><div><p class="eyebrow">Explore further</p><h2>Read the paper. Reproduce the experiments.</h2><p>The paper includes the formal assumptions, proofs, additional OGBench experiments, and ablations. The code repository reproduces the DMC experiments for CARDPol and PolCon.</p></div><div class="resource-links"><a class="button primary" href="static/paper/cardpol.pdf">Paper PDF <span aria-hidden="true">↗</span></a><a class="button" href="https://github.com/maxrudolph1/cardpol">GitHub repository <span aria-hidden="true">↗</span></a></div></div>
+    </section>
+  </main>
+  <footer class="container"><a class="site-brand" href="#top">CARDPol<span class="brand-dot">.</span></a><p>Control-centric representations from action-free video.</p><p>Figures and results from the accompanying paper.</p></footer>
+</body>
+</html>
